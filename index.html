@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>UCI Royo APP</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e293b 100%);
+      min-height: 100vh;
+      padding: 20px;
+      padding-top: env(safe-area-inset-top, 20px);
+    }
+    
+    .container { max-width: 500px; margin: 0 auto; }
+    
+    h1 {
+      color: white;
+      text-align: center;
+      font-size: 1.8rem;
+      margin-bottom: 24px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    
+    .btn-card {
+      aspect-ratio: 1;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+      text-align: center;
+      padding: 16px;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+      -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
+      border: none;
+      line-height: 1.3;
+    }
+    
+    .btn-card:active {
+      transform: scale(0.95);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .btn-card.empty { 
+      opacity: 0.5; 
+      font-weight: 400;
+      font-size: 0.9rem;
+    }
+    
+    .color-0 { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .color-1 { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .color-2 { background: linear-gradient(135deg, #a855f7, #7c3aed); }
+    .color-3 { background: linear-gradient(135deg, #f97316, #ea580c); }
+    .color-4 { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .color-5 { background: linear-gradient(135deg, #14b8a6, #0d9488); }
+    
+    .edit-icon {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 28px;
+      height: 28px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .link-icon {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      opacity: 0.6;
+    }
+    
+    .add-btn {
+      grid-column: span 2;
+      border: 2px dashed rgba(255,255,255,0.3);
+      background: transparent;
+      color: rgba(255,255,255,0.5);
+      padding: 20px;
+      border-radius: 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .add-btn:active {
+      border-color: rgba(255,255,255,0.5);
+      color: rgba(255,255,255,0.7);
+    }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+    }
+    
+    .modal.active { display: flex; }
+    
+    .modal-content {
+      background: #1e293b;
+      border-radius: 20px;
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+    }
+    
+    .modal h2 {
+      color: white;
+      margin-bottom: 20px;
+      font-size: 1.3rem;
+    }
+    
+    .modal input {
+      width: 100%;
+      padding: 14px 16px;
+      border: none;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      font-size: 1rem;
+      background: #334155;
+      color: white;
+    }
+    
+    .modal input::placeholder { color: #94a3b8; }
+    
+    .modal-btns {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    
+    .modal-btns button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .btn-cancel { background: #475569; color: white; }
+    .btn-save { background: #3b82f6; color: white; }
+    .btn-delete { background: #ef4444; color: white; }
+    
+    .hint {
+      text-align: center;
+      color: rgba(255,255,255,0.4);
+      font-size: 0.8rem;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏥 UCI ROYO APP</h1>
+    <div class="grid" id="grid"></div>
+    <p class="hint">Mantén pulsado un botón para editarlo</p>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h2>Editar botón</h2>
+      <input type="text" id="inputTitle" placeholder="Título del botón">
+      <input type="url" id="inputUrl" placeholder="https://ejemplo.com">
+      <div class="modal-btns">
+        <button class="btn-delete" onclick="deleteBtn()">Eliminar</button>
+        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn-save" onclick="saveBtn()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let buttons = JSON.parse(localStorage.getItem('uciButtons')) || [
+      { id: 1, title: 'LIMPIEZA APARATOS', url: '', color: 0 },
+      { id: 2, title: 'ALMACÉN', url: '', color: 1 },
+      { id: 3, title: '', url: '', color: 2 },
+      { id: 4, title: '', url: '', color: 3 }
+    ];
+    
+    let editingId = null;
+    let pressTimer = null;
+
+    function save() {
+      localStorage.setItem('uciButtons', JSON.stringify(buttons));
+    }
+
+    function render() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      
+      buttons.forEach(btn => {
+        const el = document.createElement('div');
+        el.className = `btn-card color-${btn.color % 6} ${!btn.title ? 'empty' : ''}`;
+        el.innerHTML = `
+          ${btn.title || 'Sin configurar'}
+          <span class="edit-icon">✏️</span>
+          ${btn.url ? '<span class="link-icon">🔗</span>' : ''}
+        `;
+        
+        // Touch/click handlers
+        el.addEventListener('touchstart', (e) => {
+          pressTimer = setTimeout(() => openModal(btn.id), 500);
+        });
+        el.addEventListener('touchend', () => {
+          if (pressTimer) {
+            clearTimeout(pressTimer);
+            if (btn.url) window.open(btn.url, '_blank');
+          }
+        });
+        el.addEventListener('click', (e) => {
+          if (e.target.closest('.edit-icon')) {
+            openModal(btn.id);
+          } else if (btn.url) {
+            window.open(btn.url, '_blank');
+          }
+        });
+        
+        grid.appendChild(el);
+      });
+      
+      // Add button
+      const addEl = document.createElement('button');
+      addEl.className = 'add-btn';
+      addEl.textContent = '+ Añadir botón';
+      addEl.onclick = addBtn;
+      grid.appendChild(addEl);
+    }
+
+    function openModal(id) {
+      editingId = id;
+      const btn = buttons.find(b => b.id === id);
+      document.getElementById('inputTitle').value = btn.title;
+      document.getElementById('inputUrl').value = btn.url;
+      document.getElementById('modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('active');
+      editingId = null;
+    }
+
+    function saveBtn() {
+      const btn = buttons.find(b => b.id === editingId);
+      btn.title = document.getElementById('inputTitle').value;
+      btn.url = document.getElementById('inputUrl').value;
+      save();
+      render();
+      closeModal();
+    }
+
+    function deleteBtn() {
+      if (buttons.length > 1) {
+        buttons = buttons.filter(b => b.id !== editingId);
+        save();
+        render();
+      }
+      closeModal();
+    }
+
+    function addBtn() {
+      const newId = Math.max(...buttons.map(b => b.id)) + 1;
+      buttons.push({ id: newId, title: '', url: '', color: buttons.length });
+      save();
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>
